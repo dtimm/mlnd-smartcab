@@ -1,5 +1,4 @@
 import random
-import numpy as np
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
@@ -26,7 +25,7 @@ class LearningAgent(Agent):
         # 
         self.trials += 1
 
-        print self.q_states
+        #print self.q_states
         self.total_reward += self.reward
         
         # decay alpha
@@ -39,13 +38,6 @@ class LearningAgent(Agent):
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
-
-        # Set timeleft if there are 10+ ticks remaining.
-        timeleft = 0
-        if deadline > 10:
-            timeleft = 1
-        else:
-            timeleft = 0
 
         # Update state
         self.state = (inputs['light'],self.next_waypoint,inputs['oncoming'],inputs['left'],inputs['right']) 
@@ -76,7 +68,7 @@ class LearningAgent(Agent):
         self.q_func(self.state, action, reward)#, s_prime)
 
         self.reward += reward
-        print 'state: {}, action = {}, reward = {}, expected = {}'.format(self.state, action, reward, expected_reward)
+        print 'state: {}, deadline = {}, action = {}, reward = {}, expected = {}'.format(self.state, deadline, action, reward, expected_reward)
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
     def get_action(self, s):
@@ -87,7 +79,7 @@ class LearningAgent(Agent):
         if not found:
             copy_state = s[:2] + (None, None, None)
             if copy_state in self.q_states.keys():
-                found = True;
+                found = True
                 self.q_states[s] = self.q_states[copy_state]
 
         if found:
@@ -114,13 +106,6 @@ class LearningAgent(Agent):
     def q_func(self, s, a, r): 
         if a == None:
             a = 'none'
-
-        # penalize mistakes harshly.
-        if r < 0:
-            r -= 25
-
-        # penalize everything else to avoid lollygagging.
-        r -= 1.0
 
         self.q_states[s][a] = (1.0 - self.alpha) * self.q_states[s][a] + self.alpha * r
 
